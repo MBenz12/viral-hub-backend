@@ -486,17 +486,16 @@ const removeInfluencer = async (req, res) => {
   let { id } = req.params
   id = parseInt(id)
   try {
-    if (
-      await prisma.influencer.findUnique({
+    const influencer = await prisma.influencer.findUnique({
+      where: {
+        id,
+      },
+    })
+    if (influencer) {
+      await prisma.account.delete({
         where: {
-          id,
-        },
-      })
-    ) {
-      await prisma.influencer.delete({
-        where: {
-          id,
-        },
+          id: influencer.accountId
+        }
       })
       return res.json('success')
     } else {
