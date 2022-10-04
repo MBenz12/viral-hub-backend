@@ -1,8 +1,8 @@
-const { PrismaClient } = require('@prisma/client')
-const readXlsxFile = require('read-excel-file/node')
-const socialCtrl = require('./social.controller')
+const { PrismaClient } = require('@prisma/client');
+const readXlsxFile = require('read-excel-file/node');
+const socialCtrl = require('./social.controller');
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 const store = async (req, res) => {
   try {
@@ -22,11 +22,11 @@ const store = async (req, res) => {
       youtubeUsername,
       twitterUsername,
       tiktokUsername,
-    } = req.body
+    } = req.body;
 
-    let { accountId } = req.body
+    let { accountId } = req.body;
 
-    let influencerId
+    let influencerId;
     if (!accountId) {
       if (
         await prisma.account.findFirst({
@@ -35,7 +35,7 @@ const store = async (req, res) => {
           },
         })
       ) {
-        return res.status(400).json('The email already exists')
+        return res.status(400).json('The email already exists');
       }
       const newAccount = await prisma.account.create({
         data: {
@@ -45,8 +45,8 @@ const store = async (req, res) => {
           region,
           language,
         },
-      })
-      accountId = newAccount.id
+      });
+      accountId = newAccount.id;
 
       const newInfluencer = await prisma.influencer.create({
         data: {
@@ -57,12 +57,12 @@ const store = async (req, res) => {
           niche,
           contactLink,
         },
-      })
+      });
 
-      influencerId = newInfluencer.id
+      influencerId = newInfluencer.id;
     } else {
       if (!(await prisma.influencer.findUnique({ where: { accountId } })))
-        return res.status(400).json("The account doesn't exist")
+        return res.status(400).json("The account doesn't exist");
 
       await prisma.account.update({
         where: {
@@ -75,7 +75,7 @@ const store = async (req, res) => {
           region: region || '',
           language: language || '',
         },
-      })
+      });
 
       const influencer = await prisma.influencer.update({
         where: {
@@ -88,21 +88,21 @@ const store = async (req, res) => {
           niche,
           contactLink,
         },
-      })
-      influencerId = influencer.id
+      });
+      influencerId = influencer.id;
     }
 
     if (instagramUsername)
-      await socialCtrl.storeInstagram(instagramUsername, accountId)
+      await socialCtrl.storeInstagram(instagramUsername, accountId);
     if (telegramUsername)
-      await socialCtrl.storeTelegram(telegramUsername, accountId)
+      await socialCtrl.storeTelegram(telegramUsername, accountId);
     if (twitterUsername)
-      await socialCtrl.storeTwitter(twitterUsername, accountId)
+      await socialCtrl.storeTwitter(twitterUsername, accountId);
     if (youtubeUsername)
-      await socialCtrl.storeYoutube(youtubeUsername, accountId)
-    if (tiktokUsername) await socialCtrl.storeTiktok(tiktokUsername, accountId)
+      await socialCtrl.storeYoutube(youtubeUsername, accountId);
+    if (tiktokUsername) await socialCtrl.storeTiktok(tiktokUsername, accountId);
 
-    await determineMainChannel(influencerId)
+    await determineMainChannel(influencerId);
 
     const influencer = await prisma.influencer.findUnique({
       where: {
@@ -119,14 +119,14 @@ const store = async (req, res) => {
           },
         },
       },
-    })
+    });
 
-    res.json(influencer)
+    res.json(influencer);
   } catch (error) {
-    console.log(error)
-    res.status(400).json(error)
+    console.log(error);
+    res.status(400).json(error);
   }
-}
+};
 
 const determineMainChannel = async (influencerId) => {
   const influencer = await prisma.influencer.findUnique({
@@ -144,38 +144,38 @@ const determineMainChannel = async (influencerId) => {
         },
       },
     },
-  })
+  });
 
-  let mainChannel
-  let maxFollowers = 0
+  let mainChannel;
+  let maxFollowers = 0;
   if (influencer.account.instagram?.followers) {
     if (influencer.account.instagram.followers >= maxFollowers) {
-      maxFollowers = influencer.account.instagram.followers
-      mainChannel = 'Instagram'
+      maxFollowers = influencer.account.instagram.followers;
+      mainChannel = 'Instagram';
     }
   }
   if (influencer.account.twitter?.followers) {
     if (influencer.account.twitter.followers >= maxFollowers) {
-      maxFollowers = influencer.account.twitter.followers
-      mainChannel = 'Twitter'
+      maxFollowers = influencer.account.twitter.followers;
+      mainChannel = 'Twitter';
     }
   }
   if (influencer.account.youtube?.subscribers) {
     if (influencer.account.youtube.subscribers >= maxFollowers) {
-      maxFollowers = influencer.account.youtube.subscribers
-      mainChannel = 'Youtube'
+      maxFollowers = influencer.account.youtube.subscribers;
+      mainChannel = 'Youtube';
     }
   }
   if (influencer.account.telegram?.channelMembers) {
     if (influencer.account.telegram.channelMembers >= maxFollowers) {
-      maxFollowers = influencer.account.telegram.channelMembers
-      mainChannel = 'Telegram'
+      maxFollowers = influencer.account.telegram.channelMembers;
+      mainChannel = 'Telegram';
     }
   }
   if (influencer.account.tiktok?.followers) {
     if (influencer.account.tiktok.followers >= maxFollowers) {
-      maxFollowers = influencer.account.tiktok.followers
-      mainChannel = 'Tiktok'
+      maxFollowers = influencer.account.tiktok.followers;
+      mainChannel = 'Tiktok';
     }
   }
 
@@ -186,21 +186,21 @@ const determineMainChannel = async (influencerId) => {
     data: {
       mainChannel,
     },
-  })
-}
+  });
+};
 
 const uploadExcel = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).send('Please upload an excel file!')
+      return res.status(400).send('Please upload an excel file!');
     }
     let path =
-      __dirname + '/../resources/static/assets/uploads/' + req.file.filename
+      __dirname + '/../resources/static/assets/uploads/' + req.file.filename;
 
     readXlsxFile(path).then(async (rows) => {
-      const titles = rows[0].map((title) => title.toLowerCase())
+      const titles = rows[0].map((title) => title.toLowerCase());
 
-      rows.shift()
+      rows.shift();
       for (const row of rows) {
         const accountData = {
           name: row[titles.indexOf('name')],
@@ -208,7 +208,7 @@ const uploadExcel = async (req, res) => {
           logo: row[titles.indexOf('logo')],
           region: row[titles.indexOf('region')],
           language: row[titles.indexOf('language')],
-        }
+        };
 
         if (
           await prisma.account.findFirst({
@@ -217,12 +217,12 @@ const uploadExcel = async (req, res) => {
             },
           })
         ) {
-          continue
+          continue;
         }
 
         const account = await prisma.account.create({
           data: accountData,
-        })
+        });
 
         const influencerData = {
           accountId: account.id,
@@ -233,81 +233,81 @@ const uploadExcel = async (req, res) => {
           niche: row[titles.indexOf('niche')],
           mainChannel: row[titles.indexOf('mainchannel')],
           promotionType: row[titles.indexOf('promotiontype')],
-        }
+        };
 
         const influencer = await prisma.influencer.create({
           data: influencerData,
-        })
+        });
 
         const telegramData = {
           accountId: account.id,
           username: row[titles.indexOf('telegramusername')],
           socialUrl: row[titles.indexOf('telegramsocialurl')],
-        }
+        };
 
         await prisma.telegram.create({
           data: telegramData,
-        })
+        });
 
-        await socialCtrl.storeTelegram(telegramData.username, account.id)
+        await socialCtrl.storeTelegram(telegramData.username, account.id);
 
         const twitterData = {
           accountId: account.id,
           username: row[titles.indexOf('twitterusername')],
           socialUrl: row[titles.indexOf('twittersocialurl')],
-        }
+        };
 
         await prisma.twitter.create({
           data: twitterData,
-        })
+        });
 
-        await socialCtrl.storeTwitter(twitterData.username, account.id)
+        await socialCtrl.storeTwitter(twitterData.username, account.id);
 
         const tiktokData = {
           accountId: account.id,
           username: row[titles.indexOf('tiktokusername')],
           socialUrl: row[titles.indexOf('tiktoksocialurl')],
-        }
+        };
 
         await prisma.tiktok.create({
           data: tiktokData,
-        })
+        });
 
-        await socialCtrl.storeTiktok(tiktokData.username, account.id)
+        await socialCtrl.storeTiktok(tiktokData.username, account.id);
 
         const instagramData = {
           accountId: account.id,
           username: row[titles.indexOf('instagramusername')],
           socialUrl: row[titles.indexOf('instagramsocialurl')],
-        }
+        };
 
         await prisma.instagram.create({
           data: instagramData,
-        })
+        });
 
-        await socialCtrl.storeTelegram(instagramData.username, account.id)
+        await socialCtrl.storeTelegram(instagramData.username, account.id);
 
         const youtubeData = {
           accountId: account.id,
           username: row[titles.indexOf('youtubeusername')],
           socialUrl: row[titles.indexOf('youtubesocialurl')],
-        }
+        };
 
         await prisma.youtube.create({
           data: youtubeData,
-        })
+        });
 
-        await socialCtrl.storeYoutube(youtubeData.username, account.id)
+        await socialCtrl.storeYoutube(youtubeData.username, account.id);
 
-        await determineMainChannel(influencer.id)
+        await determineMainChannel(influencer.id);
       }
-    })
-    res.json('success')
+    });
+    res.json('success');
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ error })
+    console.log(error);
+    res.status(500).json({ error });
   }
-}
+};
 
 const getList = async (req, res) => {
   // try {
@@ -319,8 +319,8 @@ const getList = async (req, res) => {
   // }
   // To Do: filter
   try {
-    const { ER, language, userName, location, promotionType } = req.query
-    let { minPrice, maxPrice, minAudienceSize, maxAudienceSize } = req.query
+    const { ER, language, userName, location, promotionType } = req.query;
+    let { minPrice, maxPrice, minAudienceSize, maxAudienceSize } = req.query;
 
     let influencers = await prisma.influencer.findMany({
       include: {
@@ -359,7 +359,7 @@ const getList = async (req, res) => {
           },
         },
       },
-    })
+    });
 
     // const tagArr = tags ? tags.split(',') : []
     influencers = influencers.filter(
@@ -381,19 +381,19 @@ const getList = async (req, res) => {
           (location &&
             influencer.account.region
               .toLowerCase()
-              .includes(location.toLowerCase()))),
-    )
+              .includes(location.toLowerCase())))
+    );
 
     influencers.forEach((influencer) => {
       const budgets = influencer.campaigns.map(
-        (campaign) => campaign.campaign.negoBudget,
-      )
-      influencer.priceRange = [Math.min(...budgets), Math.max(...budgets)]
-      if (!budgets.length) influencer.priceRange = [0, 0]
-    })
+        (campaign) => campaign.campaign.negoBudget
+      );
+      influencer.priceRange = [Math.min(...budgets), Math.max(...budgets)];
+      if (!budgets.length) influencer.priceRange = [0, 0];
+    });
 
-    minAudienceSize = minAudienceSize ? minAudienceSize * 1 : 0
-    maxAudienceSize = maxAudienceSize ? maxAudienceSize * 1 : Number.MAX_VALUE
+    minAudienceSize = minAudienceSize ? minAudienceSize * 1 : 0;
+    maxAudienceSize = maxAudienceSize ? maxAudienceSize * 1 : Number.MAX_VALUE;
 
     influencers = influencers.filter((influencer) => {
       let maxFollowers = Math.max(
@@ -405,33 +405,33 @@ const getList = async (req, res) => {
         influencer.account.instagram
           ? influencer.account.instagram.followers
           : 0,
-        influencer.account.youtube ? influencer.account.youtube.subscribers : 0,
-      )
-      return minAudienceSize <= maxFollowers && maxFollowers <= maxAudienceSize
-    })
+        influencer.account.youtube ? influencer.account.youtube.subscribers : 0
+      );
+      return minAudienceSize <= maxFollowers && maxFollowers <= maxAudienceSize;
+    });
 
     if (minPrice && maxPrice) {
-      minPrice = minPrice * 1
-      maxPrice = maxPrice * 1
+      minPrice = minPrice * 1;
+      maxPrice = maxPrice * 1;
 
       influencers = influencers.filter(
         (influencer) =>
           (influencer.priceRange[1] >= minPrice &&
             influencer.priceRange[0] <= maxPrice) ||
           (influencer.priceRange[0] <= maxPrice &&
-            influencer.priceRange[1] >= minPrice),
-      )
+            influencer.priceRange[1] >= minPrice)
+      );
     }
 
-    res.json(influencers)
+    res.json(influencers);
   } catch (error) {
-    console.log(error)
-    res.status(500).json(error)
+    console.log(error);
+    res.status(500).json(error);
   }
-}
+};
 
 const getById = async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
   try {
     const influencer = await prisma.influencer.findUnique({
       where: {
@@ -473,18 +473,18 @@ const getById = async (req, res) => {
           },
         },
       },
-    })
+    });
 
-    res.json(influencer)
+    res.json(influencer);
   } catch (error) {
-    console.log(error)
-    res.status(400).json(error)
+    console.log(error);
+    res.status(400).json(error);
   }
-}
+};
 
 const removeInfluencer = async (req, res) => {
-  let { id } = req.params
-  id = parseInt(id)
+  let { id } = req.params;
+  id = parseInt(id);
   try {
     const influencer = await prisma.influencer.findUnique({
       where: {
@@ -499,13 +499,13 @@ const removeInfluencer = async (req, res) => {
       })
       return res.json('success')
     } else {
-      return res.status(400).json("The influencer doesn't exist")
+      return res.status(400).json("The influencer doesn't exist");
     }
   } catch (error) {
-    console.log(error)
-    res.status(400).json(error)
+    console.log(error);
+    res.status(400).json(error);
   }
-}
+};
 
 module.exports = {
   store,
@@ -513,4 +513,4 @@ module.exports = {
   getById,
   uploadExcel,
   removeInfluencer,
-}
+};
